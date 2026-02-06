@@ -267,17 +267,15 @@ o._allowedAtStart = tripAllowedNow(o, o._t0);
   };
 
   function pickRouteKeyForTrip(trip) {
-      // === 0a) HARD-CODE IZNIMKA: linija 4 → DEPOT ruta
-  // samo za polaske OD Gomilice u 09:10 i 17:10
-  if (
-    trip.linija === '4' &&
-    trip.red === 'dnevni' &&
-    trip.smjer === 'od' &&
-    trip.okretište === 'Gomilice' &&
-    (trip.vrijeme === '09:10' || trip.vrijeme === '17:10')
-  ) {
-    return '4_G-PR_DEPOT';
-  }
+ // === IZNIMKA DEFINIRANA PODACIMA ===
+if (
+  trip.red === 'dnevni_iznimka' &&
+  trip.linija === '4' &&
+  trip.smjer === 'od' &&
+  trip.okretište === 'Gomilice'
+) {
+  return '4_G-PR_DEPOT';
+}
        // === 0) EKSPPLICITNA DEPOT / IZNIMNA RUTA IZ POLASCI.TXT ===
   // Ako je u stupcu "red" naveden točan routeKey (npr. 4_G-PR_DEPOT),
   // i on postoji u Redoslijed.txt → koristi ga bez ikakve daljnje logike
