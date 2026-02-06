@@ -64,6 +64,25 @@
     return d.getDay() === 0 || SPECIAL_MD.has(md); // nedjelja ili poseban datum
   }
 
+  function tripMatchesToday(tr) {
+  const tag = String(tr.red || '').toLowerCase().trim();
+
+  // ako nije označeno → uvijek vrijedi
+  if (!tag) return true;
+
+  const special = isSpecialDay();
+
+  if (tag === 'dnevni') {
+    return !special;
+  }
+
+  if (tag === 'posebni') {
+    return special;
+  }
+
+  return true; // sve ostalo ne ograničava
+}
+
   function isNightTimeSec(sec) {
     // noć: 23:00–05:00 (preko ponoći)
     return sec >= 23 * 3600 || sec < 5 * 3600;
@@ -81,22 +100,21 @@
   }
 
   function tripAllowedNow(tr, tNowSec) {
-    // tNowSec: "sat u danu" u sekundama
-    const special = isSpecialDay();
-    const night = isNightTimeSec(tNowSec);
+  const special = isSpecialDay();
+  const night = isNightTimeSec(tNowSec);
 
-    if (isSpecialLine(tr.linija)) {
-      // P1/P2: noću uvijek + cijeli dan na posebne dane/nedjelje
-      return night || special;
-    }
-
-    // 1–5 i S-varijante: nikad noću i nikad na poseban dan/nedjelju
-    if (special) return false;
-    if (night) return false;
-
-    // inače dopušteno (pon–sub, dan)
+  // 🚋 P1 / P2 – AKO POSTOJI U VOZNOM REDU, DOZVOLI KRETANJE
+  if (isSpecialLine(tr.linija)) {
     return true;
   }
+
+  // 1–5 i S-varijante
+  if (special) return false;
+  if (night) return false;
+
+  return true;
+}
+
 
   const hav = (a, b) => {
     const R = 6371000, toR = (x) => x * Math.PI / 180;
@@ -276,7 +294,8 @@ if (
 ) {
   return '4_G-PR_DEPOT';
 }
-       // === 0) EKSPPLICITNA DEPOT / IZNIMNA RUTA IZ POLASCI.TXT ===
+
+    // === 0) EKSPPLICITNA DEPOT / IZNIMNA RUTA IZ POLASCI.TXT ===
   // Ako je u stupcu "red" naveden točan routeKey (npr. 4_G-PR_DEPOT),
   // i on postoji u Redoslijed.txt → koristi ga bez ikakve daljnje logike
   if (trip.red) {
@@ -415,7 +434,7 @@ function arrivalsForStation(stationId, tNow) {
     const rk = pickRouteKeyForTrip(tr);
     if (!rk) continue;
       // ⛔ filtriraj po prometnim pravilima (ISTO kao karta)
-  if (!tripAllowedNow(tr, tNow)) continue;
+if (!tripMatchesToday(tr)) continue;
 
     const key = tr.linija + '|' + rk;
     if (!tripsByLineDir.has(key)) tripsByLineDir.set(key, []);
@@ -1130,9 +1149,9 @@ for (let i = arr.length - 1; i >= 0; i--) {
 
 
       // 1) filtriraj tripove po prometnim pravilima (za OVAJ trenutak)
-      const arrAllowed = arr.filter(tr => tripAllowedNow(tr, t));
-      // ✅ tripovi koji su "validni" po pravilima u TRENUTKU POLASKA
-const arrService = arr.filter(tr => tr._allowedAtStart);
+      const arrAllowed = arr;
+const arrService = arr;
+
 
       const lastRealTrip = arr[arr.length - 1] || null;
 const lastRealKey = lastRealTrip ? pickRouteKeyForTrip(lastRealTrip) : null;
@@ -1350,6 +1369,7 @@ if (!prevEndsDepot) {
 }
 
 
+
   // 🏠 SPREMIŠTE → vidljivo još DEPOT_POST nakon dolaska
   else if (prevEndsDepot && t <= prev._t1 + DEPOT_POST) {
     pos = endPos;
@@ -1539,6 +1559,8 @@ filter.style.bottom = '10px';
 filter.style.transform = 'translateX(-50%)';
 filter.style.width = '92%';
 filter.style.maxWidth = '420px';
+
+
 
     // napravi tramvaj ikonu
     const btn = document.createElement('div');
