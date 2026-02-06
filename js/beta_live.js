@@ -430,7 +430,7 @@ function arrivalsForStation(stationId, tNow) {
     const rk = pickRouteKeyForTrip(tr);
     if (!rk) continue;
       // ⛔ filtriraj po prometnim pravilima (ISTO kao karta)
-if (!tripMatchesToday(tr)) continue;
+if (!tr._allowedAtStart && !isActiveTrip(tr, tNow)) continue;
 
     const key = tr.linija + '|' + rk;
     if (!tripsByLineDir.has(key)) tripsByLineDir.set(key, []);
