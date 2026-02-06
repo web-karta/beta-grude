@@ -479,11 +479,15 @@ if (isActiveTrip(tr, tNow)) {
   secondsLeft =
     (st.dist - distNow) / r.total * (tr._t1 - tr._t0);
 } else {
-  // ⏳ tramvaj još nije krenuo
+  const untilStart = tr._t0 - tNow;
+
+  // ⛔ ako je polazak dalje od 10 min, preskoči
+  if (untilStart > 10 * 60) continue;
+
   const secFromStart =
     st.dist / r.total * (tr._t1 - tr._t0);
 
-  secondsLeft = tr._t0 - tNow + secFromStart;
+  secondsLeft = untilStart + secFromStart;
 }
 
 // samo u idućih 10 min
