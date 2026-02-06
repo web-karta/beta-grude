@@ -267,6 +267,15 @@ o._allowedAtStart = tripAllowedNow(o, o._t0);
   };
 
   function pickRouteKeyForTrip(trip) {
+       // === 0) EKSPPLICITNA DEPOT / IZNIMNA RUTA IZ POLASCI.TXT ===
+  // Ako je u stupcu "red" naveden točan routeKey (npr. 4_G-PR_DEPOT),
+  // i on postoji u Redoslijed.txt → koristi ga bez ikakve daljnje logike
+  if (trip.red) {
+    const rk = String(trip.red).trim();
+    if (routeStations.has(rk)) {
+      return rk;
+    }
+  }
     const line = String(trip.linija || '').trim();
     const termRaw = String(trip.okretište || '').trim();
 
