@@ -1309,8 +1309,8 @@ popupState = {
  // 🚋 OKRETIŠTE (nije spremište)
 if (!prevEndsDepot) {
 
-  // ⛔ P1 / P2: ako nema sljedećeg polaska → NE PRIKAZUJ
-  if (isSpecialLine(labelTrip.linija) && !next) {
+  // ⛔ ako NEMA sljedeće vožnje → makni i 1–5 (i sve ostale)
+  if (!next) {
     pos = null;
     trForLabel = null;
     popupState = null;
@@ -1323,7 +1323,7 @@ if (!prevEndsDepot) {
 
     popupState = {
       mode: 'waiting',
-      secondsLeft: next ? (next._t0 - t) : null,
+      secondsLeft: (next._t0 - t),
       routeKey: rk,
       networkRouteKey: nextKey || prevKey,
       nextStopName: null
