@@ -1513,6 +1513,14 @@ map.on('click', () => {
 
 // onda sakrij
 filter.style.display = 'none';
+// 🔒 reset svih mogućih Leaflet pozicija
+filter.style.left = '50%';
+filter.style.right = 'auto';
+filter.style.top = 'auto';
+filter.style.bottom = '10px';
+filter.style.transform = 'translateX(-50%)';
+filter.style.width = '92%';
+filter.style.maxWidth = '420px';
 
     // napravi tramvaj ikonu
     const btn = document.createElement('div');
