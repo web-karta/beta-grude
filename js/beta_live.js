@@ -83,10 +83,7 @@
   return true; // sve ostalo ne ograničava
 }
 
-  function isNightTimeSec(sec) {
-    // noć: 23:00–05:00 (preko ponoći)
-    return sec >= 23 * 3600 || sec < 5 * 3600;
-  }
+  
 
   function isSpecialLine(line) {
     // POSEBNE LINIJE: P1/P2 i njihove S-varijante (P1S/P2S)
@@ -247,7 +244,6 @@ function formatMinsSmart(secondsLeft) {
 
     o._t0 = parseTime(o.vrijeme);
     // je li vožnja smjela krenuti u trenutku polaska
-o._allowedAtStart = tripAllowedNow(o, o._t0);
 
     if (!o.linija || !o.vozilo || o._t0 == null || !Number.isFinite(o.trajanje)) return;
 
@@ -1207,14 +1203,15 @@ if (!prev && !next) {
     // pusti dalje (ne postavljaj pos/rk/trForLabel)
   } else {
     // ⛔ P1/P2 (i P1S/P2S): ako danas nisu u prometu, nemoj ih "parkirati" na okretištu
-    if (isSpecialLine(lastFinished.linija) && !tripAllowedNow(lastFinished, t)) {
-      const ex = markers.get(vozilo);
-      if (ex) {
-        layer.removeLayer(ex);
-        markers.delete(vozilo);
-      }
-      continue; // preskoči ovo vozilo
-    }
+ if (!tripMatchesToday(lastFinished)) {
+  const ex = markers.get(vozilo);
+  if (ex) {
+    layer.removeLayer(ex);
+    markers.delete(vozilo);
+  }
+  continue;
+}
+
 
     const lastKey =
       lastRouteKeyByVehicle.get(vozilo) ||
@@ -1251,10 +1248,10 @@ if (!prev && !next) {
 let active = null;
 for (let i = arr.length - 1; i >= 0; i--) {
   const tr = arr[i];
-  if (tr._allowedAtStart && isActiveTrip(tr, t)) {
-    active = tr;
-    break;
-  }
+if (isActiveTrip(tr, t)) {
+  active = tr;
+  break;
+}
 }
 
 
