@@ -39,16 +39,6 @@
   }
 }
 
-/* samo za mobitel */
-@media (max-width: 768px) {
-
-  /* klasa koju ćemo dinamički paliti */
-  .stations-small .leaflet-marker-icon,
-  .stations-small .leaflet-interactive {
-    transform: scale(0.7);
-    transform-origin: center center;
-  }
-}
 
 
         /* ⬇️ STATION LABELS ISPOD VOZILA */
@@ -467,6 +457,19 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
                 interactive: true,
             }
         }
+
+        const STATION_ICON_NORMAL = L.icon({
+  iconUrl: 'markers/Tramvajskestanice_2.svg',
+  iconSize: [19, 19],
+  iconAnchor: [9.5, 9.5]
+});
+
+const STATION_ICON_SMALL = L.icon({
+  iconUrl: 'markers/Tramvajskestanice_2.svg',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7]
+});
+
         map.createPane('pane_Tramvajskestanice_2');
         map.getPane('pane_Tramvajskestanice_2').style.zIndex = 550;
         map.getPane('pane_Tramvajskestanice_2').style['mix-blend-mode'] = 'normal';
@@ -477,16 +480,35 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
             layerName: 'layer_Tramvajskestanice_2',
             pane: 'pane_Tramvajskestanice_2',
             onEachFeature: pop_Tramvajskestanice_2,
-            pointToLayer: function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.marker(latlng, style_Tramvajskestanice_2_0(feature));
-            },
+ pointToLayer: function (feature, latlng) {
+  return L.marker(latlng, {
+    icon: STATION_ICON_NORMAL,
+    interactive: true,
+    pane: 'pane_Tramvajskestanice_2'
+  });
+},
+
         });
         bounds_group.addLayer(layer_Tramvajskestanice_2);
         map.addLayer(layer_Tramvajskestanice_2);
+
+        function updateStationIconsByZoom() {
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (!isMobile) return;
+
+  const z = map.getZoom();
+  const useSmall = z < 16;
+
+  layer_Tramvajskestanice_2.eachLayer(m => {
+    if (!m.setIcon) return;
+    m.setIcon(useSmall ? STATION_ICON_SMALL : STATION_ICON_NORMAL);
+  });
+}
+
+// inicijalno + na zoom
+updateStationIconsByZoom();
+map.on('zoomend', updateStationIconsByZoom);
+
         setBounds();
         var i = 0;
         layer_Tramvajskestanice_2.eachLayer(function(layer) {
@@ -542,27 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 });
 
-function updateStationIconScale() {
-  const isMobile = window.matchMedia('(max-width: 768px)').matches;
-  if (!isMobile) {
-    map.getContainer().classList.remove('stations-small');
-    return;
-  }
 
-  const z = map.getZoom();
-
-  if (z < 16) {
-    map.getContainer().classList.add('stations-small');
-  } else {
-    map.getContainer().classList.remove('stations-small');
-  }
-}
-
-// inicijalno
-updateStationIconScale();
-
-// na svaku promjenu zooma
-map.on('zoomend', updateStationIconScale);
 
         </script>        
     
