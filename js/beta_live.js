@@ -864,32 +864,32 @@ const baseY = cy - r - gap;
 // ključ: linija -> odredište -> tekst
 const VIA_BY_DEST = {
   '1': {
-    'PEŠIJA':   'Bili Brig, Boboška)',
-    'DUBRAVA':  'Boboška, Bili Brig)'
+    'PEŠIJA':   '(Bili Brig — Boboška)',
+    'DUBRAVA':  '(Boboška — Bili Brig)'
   },
   '2': {
-    'KRŠTELICA': 'Gomilice, Krištelica)',
-    'PEŠIJA':    'Krištelica, Gomilice)'
+    'KRŠTELICA': '(Gomilice — Krištelica)',
+    'PEŠIJA':    '(Krištelica, Gomilice)'
   },
   '3': {
-    'PRISPA':    'Boboška, Otok)',
-    'KRŠTELICA': 'Otok, Boboška)'
+    'PRISPA':    '(Boboška — Otok)',
+    'KRŠTELICA': '(Otok — Boboška)'
   },
   '4': {
-    'PRISPA':    'Krištelica, Bili Brig)',
-    'GOMILICE':  'Bili Brig, Krištelica)'
+    'PRISPA':    '(Krištelica — Bili Brig)',
+    'GOMILICE':  '(Bili Brig — Krištelica)'
   },
   '5': {
-    'GOMILICE':  'Prispa, Otok)',
-    'POLJANICE': 'Otok, Prispa)'
+    'GOMILICE':  '(Prispa — Otok)',
+    'POLJANICE': '(Otok — Prispa)'
   },
   'P1': {
-    'POLJANICE': 'Boboška, Otok)',
-    'KRŠTELICA': 'Otok, Boboška)'
+    'POLJANICE': '(Boboška — Otok)',
+    'KRŠTELICA': '(Otok — Boboška)'
   },
   'P2': {
-    'DUBRAVA': 'Krištelica, Bili Brig)',
-    'PEŠIJA':  'Bili Brig, Krištelica)'
+    'DUBRAVA': '(Krištelica — Bili Brig)',
+    'PEŠIJA':  '(Bili Brig — Krištelica)'
   }
 };
 
@@ -930,7 +930,7 @@ const viaText = via
        margin-top:-10px;
        line-height:1.1;
      ">
-       (Preko: ${via}
+       ${via}
      </div>`
   : '';
 
