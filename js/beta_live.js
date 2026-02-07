@@ -769,11 +769,13 @@ function makeVehicleIcon(label, angleDeg, showArrow, color) {
   const H = 66;           // ukupna visina SVG
 
   // Elipsa (badge)
-  const cx = 33, cy = 38; // centar elipse
-  const rx = 20, ry = 16; // elipsa malo šira (stane P2S)
+  // Krug (badge)
+const cx = 33, cy = 38; 
+const r  = 18;          // radijus kruga (po želji 17–20)
+
 
   // Strelica (offset + veličina)
-  const gap = 3;          // koliko je odmaknuta od elipse (povećaj za veći razmak)
+  const gap = 0;          // koliko je odmaknuta od elipse (povećaj za veći razmak)
   const baseW = 18;       // širina baze strelice
   const baseH = 10;       // visina baze (koliko “debelo” izgleda)
   const tipL  = 14;       // dužina do šiljka
@@ -781,7 +783,7 @@ function makeVehicleIcon(label, angleDeg, showArrow, color) {
 
   // Strelica se crta “iznad” elipse pa rotira oko (cx,cy)
   // Baza strelice je iznad elipse (y = cy-ry-gap), a šiljak još gore.
-  const baseY = cy - ry - gap;
+const baseY = cy - r - gap;
   const tipY  = baseY - tipL;
 
   // Zaobljena strelica kao path:
@@ -807,7 +809,7 @@ function makeVehicleIcon(label, angleDeg, showArrow, color) {
   const svg = `
     <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       ${arrow}
-      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${C}" stroke="white" stroke-width="2"></ellipse>
+<circle cx="${cx}" cy="${cy}" r="${r}" fill="${C}" stroke="white" stroke-width="2"></circle>
       <text x="${cx}" y="${cy+5}" text-anchor="middle"
         font-size="13" font-weight="700" fill="white"
         font-family="Arial, sans-serif">${label}</text>
