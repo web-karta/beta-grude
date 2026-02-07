@@ -391,6 +391,16 @@ function formatMinsSmart(secondsLeft) {
     return (routeKey || '').includes('_S-');
   }
 
+  function displayLineForVehicle(tr, routeKey) {
+  // ide U spremište → pokaži samo "S"
+  if (routeKey && isDepotEnd(routeKey)) {
+    return 'S';
+  }
+
+  // ide IZ spremišta ili normalna vožnja → makni eventualni S-sufiks
+  return String(tr.linija || '').replace(/S$/, '');
+}
+
   /* ================= ROUTE (TRACK-FOLLOWING via network graph) ================= */
 
   const routeCache = new Map();
@@ -1553,7 +1563,8 @@ if (!pos || !trForLabel || !popupState) {
       // dodatni safety: ako je moving, strelica mora biti true
       const arrowFinal = (popupState.mode === 'moving') ? true : !!showArrow;
 
-      const ic = makeVehicleIcon(trForLabel.linija, ang, arrowFinal, iconColor);
+const labelLine = displayLineForVehicle(trForLabel, popupState.routeKey);
+const ic = makeVehicleIcon(labelLine, ang, arrowFinal, iconColor);
 
 if (isSelected && (popupState.networkRouteKey || popupState.routeKey)) {
   highlightNetwork(popupState.networkRouteKey || popupState.routeKey);
