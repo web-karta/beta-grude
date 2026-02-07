@@ -775,7 +775,7 @@ const r  = 18;          // radijus kruga (po želji 17–20)
 
 
   // Strelica (offset + veličina)
-  const gap = 0;          // koliko je odmaknuta od elipse (povećaj za veći razmak)
+  const gap = -2;          // koliko je odmaknuta od elipse (povećaj za veći razmak)
   const baseW = 18;       // širina baze strelice
   const baseH = 10;       // visina baze (koliko “debelo” izgleda)
   const tipL  = 14;       // dužina do šiljka
