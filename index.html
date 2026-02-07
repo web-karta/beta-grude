@@ -39,6 +39,18 @@
   }
 }
 
+/* samo za mobitel */
+@media (max-width: 768px) {
+
+  /* klasa koju ćemo dinamički paliti */
+  .stations-small .leaflet-marker-icon,
+  .stations-small .leaflet-interactive {
+    transform: scale(0.7);
+    transform-origin: center center;
+  }
+}
+
+
         /* ⬇️ STATION LABELS ISPOD VOZILA */
 .leaflet-tooltip-pane {
   z-index: 500 !important;
@@ -315,15 +327,10 @@ infoBtn.innerHTML =
 
 L.DomEvent.on(infoBtn, 'click', function (e) {
   L.DomEvent.stop(e);
-
-L.DomEvent.on(infoBtn, 'click', function (e) {
-  L.DomEvent.stop(e);
-
   const panel = document.getElementById('betaInfoPanel');
   panel.classList.toggle('open');
 });
 
-});
 
 
   topRight.appendChild(infoBtn);
@@ -534,6 +541,28 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
   }, { passive: true });
 });
+
+function updateStationIconScale() {
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (!isMobile) {
+    map.getContainer().classList.remove('stations-small');
+    return;
+  }
+
+  const z = map.getZoom();
+
+  if (z < 16) {
+    map.getContainer().classList.add('stations-small');
+  } else {
+    map.getContainer().classList.remove('stations-small');
+  }
+}
+
+// inicijalno
+updateStationIconScale();
+
+// na svaku promjenu zooma
+map.on('zoomend', updateStationIconScale);
 
         </script>        
     
