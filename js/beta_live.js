@@ -1292,21 +1292,12 @@ if (clk) clk.textContent = formatDateTime();
       // 🔴 PRVO: postoji li AKTIVNA vožnja (bez ikakvog filtriranja)
 let activeAny = null;
 for (let i = arr.length - 1; i >= 0; i--) {
-  if (isActiveTrip(arr[i], t)) {
-    activeAny = arr[i];
-    break;
-  }
+  const trX = arr[i];
+  if (!tripAllowedNow(trX, t)) continue;
+  if (isActiveTrip(trX, t)) { activeAny = trX; break; }
 }
 
-// 🚫 SUBOTA: ova vozila ne postoje na karti (osim ako baš želiš depot-post logiku)
-if (isVehicleDisabledToday(vozilo, arr[0]?.linija)) {
-  const ex = markers.get(vozilo);
-  if (ex) {
-    layer.removeLayer(ex);
-    markers.delete(vozilo);
-  }
-  continue;
-}
+
 
 
 
@@ -1384,14 +1375,12 @@ if (!prev && !next) {
     // pusti dalje (ne postavljaj pos/rk/trForLabel)
   } else {
     // ⛔ P1/P2 (i P1S/P2S): ako danas nisu u prometu, nemoj ih "parkirati" na okretištu
- if (!tripMatchesToday(lastFinished)) {
+ if (!tripAllowedNow(lastFinished, t)) {
   const ex = markers.get(vozilo);
-  if (ex) {
-    layer.removeLayer(ex);
-    markers.delete(vozilo);
-  }
+  if (ex) { layer.removeLayer(ex); markers.delete(vozilo); }
   continue;
 }
+
 
 
     const lastKey =
