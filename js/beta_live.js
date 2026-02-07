@@ -788,6 +788,10 @@ return best.sort((a, b) => {
       cum.push(total);
     }
 
+    // safety: total = zadnji kumulativ
+total = cum[cum.length - 1] || total;
+
+
     const out = { poly, cum, total };
     routeCache.set(key, out);
     return out;
