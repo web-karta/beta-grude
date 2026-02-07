@@ -533,13 +533,23 @@ best.push({
   linija: tr.linija,
   smjer: destFromRouteKey(rk),
   label: fmt.label,
-  sortMin: fmt.sortMin
+  sortMin: fmt.sortMin,
+    secondsLeft: secondsLeft   // ⬅️ KLJUČNO
+
 });
 
 
   }
 
- return best.sort((a, b) => a.sortMin - b.sortMin);
+return best.sort((a, b) => {
+  // 1️⃣ stvarno vrijeme dolaska (sekunde)
+  if (a.secondsLeft !== b.secondsLeft) {
+    return a.secondsLeft - b.secondsLeft;
+  }
+
+  // 2️⃣ fallback: stabilan red (linija)
+  return String(a.linija).localeCompare(String(b.linija), 'hr');
+});
 
 
 }
