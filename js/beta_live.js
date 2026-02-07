@@ -31,8 +31,18 @@
   };
 
     // Vidljivost u spremištu: 5 min prije polaska i 5 min nakon dolaska
+    
   const DEPOT_PRE  = 5 * 60;
   const DEPOT_POST = 5 * 60;
+
+  // ⏱️ Stajanje na stanicama (u sekundama) – ali ukupno trajanje ostaje iz POLASCI trajanje
+const DWELL_TIME = 2;
+const ETA_ALIGN = 0.5; // sekundi – mikro poravnanje
+
+
+// tolerancija (u metrima) za “uhvati stanicu”
+const STOP_EPS = 10;
+
 
   function isDepotEnd(routeKey) {
     // dolazak u spremište kad je odredište S (npr. "...-S")
@@ -547,23 +557,59 @@ let secondsLeft;
 
 if (isActiveTrip(tr, tNow)) {
   // 🚋 tramvaj je u vožnji
-  const frac = clamp((tNow - tr._t0) / (tr._t1 - tr._t0), 0, 1);
-  const distNow = frac * r.total;
 
-  if (st.dist <= distNow) continue;
+ // === SINKRONIZACIJA SA STAJANJEM NA STANICAMA ===
 
-  secondsLeft =
-    (st.dist - distNow) / r.total * (tr._t1 - tr._t0);
+// osnovno linearno vrijeme do stanice
+// === 100% isti timing kao render (DWELL) ===
+let tInTrip = tNow;
+if (tr._t1 >= DAY && tNow < tr._t0) tInTrip = tNow + DAY;
+
+const tripDur = (tr._t1 - tr._t0);     // u sekundama
+const tRel = clamp(tInTrip - tr._t0, 0, tripDur);
+
+const nStops = list.length;
+
+// ukupno stajanje u cijeloj vožnji
+const dwellTotal = Math.max(0, (nStops - 1) * DWELL_TIME);
+
+// vrijeme stvarnog kretanja (unutar istog tripDur)
+const runTime = Math.max(1, tripDur - dwellTotal);
+
+// index ove stanice u listi (0 = prva)
+const stIndex = list.indexOf(st);
+
+// vrijeme dolaska na ovu stanicu u "runTime" skali
+const arriveRun = (st.dist / r.total) * runTime;
+
+// stvarno vrijeme dolaska (kao u renderu: + (i-1)*DWELL)
+const arriveReal = arriveRun + Math.max(0, (stIndex - 1)) * DWELL_TIME;
+
+// ako je već prošla (i odradila dwell) → preskoči
+if (tRel >= arriveReal + DWELL_TIME) continue;
+
+// dok stoji na stanici → 0 (formatMinsSmart će dati "manje od 1 min.")
+secondsLeft = Math.max(0, arriveReal - tRel);
+
+
 } else {
-  const untilStart = tr._t0 - tNow;
+let untilStart = tr._t0 - tNow;
+if (untilStart < 0) untilStart += DAY;
 
-  // ⛔ ako je polazak dalje od 10 min, preskoči
-  if (untilStart > 10 * 60) continue;
+if (untilStart > 10 * 60) continue;
 
-  const secFromStart =
-    st.dist / r.total * (tr._t1 - tr._t0);
+const tripDur = (tr._t1 - tr._t0);
+const nStops = list.length;
 
-  secondsLeft = untilStart + secFromStart;
+const dwellTotal = Math.max(0, (nStops - 2) * DWELL_TIME);
+const runTime = Math.max(1, tripDur - dwellTotal);
+
+const stIndex = list.indexOf(st);
+const arriveRun  = (st.dist / r.total) * runTime;
+const arriveReal = arriveRun + Math.max(0, (stIndex - 1)) * DWELL_TIME;
+
+secondsLeft = untilStart + arriveReal;
+
 }
 
 // samo u idućih 10 min
@@ -881,7 +927,7 @@ const VIA_BY_DEST = {
   },
   '5': {
     'GOMILICE':  '(Prispa — Otok)',
-    'POLJANICE': '(Otok — Prispa)'
+    'POLJANICE': '(Otok, Prispa)'
   },
   'P1': {
     'POLJANICE': '(Boboška — Otok)',
@@ -1452,27 +1498,80 @@ if (active) {
   trForLabel = active;
 
 
-        let frac = 0;
-        if (r && r.total > 0) {
-          let tInTrip = t;
-          if (active._t1 >= DAY && t < active._t0) tInTrip = t + DAY;
+let frac = 0;
 
-          const denom = (active._t1 - active._t0);
-          frac = denom > 0 ? clamp((tInTrip - active._t0) / denom, 0, 1) : 0;
+if (r && r.total > 0) {
+  let tInTrip = t;
+  if (active._t1 >= DAY && t < active._t0) tInTrip = t + DAY;
 
-          const pt = pointAt(r, frac * r.total);
-          pos = pt.latlng;
-          ang = pt.angle;
-          showArrow = true;
-          if (pos) {
-  lastPosByVehicle.set(vozilo, pos);
+  const tRel = clamp(tInTrip - active._t0, 0, (active._t1 - active._t0)); // ukupno trajanje ostaje isto!
+
+  const stationDists = getRouteStationDistances(rk);
+  const nStops = stationDists ? stationDists.length : 0;
+
+  // ukupno “stajanje” unutar vožnje
+const dwellTotal = Math.max(0, (nStops - 2) * DWELL_TIME);
+
+  // efektivno vrijeme kretanja (unutar ISTOG ukupnog trajanja)
+  const runTime = Math.max(1, (active._t1 - active._t0) - dwellTotal);
+
+  // 1) bazna udaljenost po ruti, kao da nema stajanja, ali sa skraćenim runTime
+  let distNow = (tRel / (active._t1 - active._t0)) * r.total;
+
+
+  // 2) ako imamo stanice, uvedi “stajanje” tako da u tim prozorima dist ostane na stanici
+  if (stationDists && nStops >= 2) {
+    // mapiranje vremena -> dist:
+    // - kretanje se rastegne u runTime
+    // - na svakoj stanici (osim prve) stoji DWELL_TIME
+    //
+    // Prvo: pretvori tRel u "run clock" tako da oduzme već odrađena stajanja
+    let runClock = tRel;
+
+    for (let i = 1; i < nStops; i++) {
+      const stopDist = stationDists[i].dist;
+
+      // vrijeme dolaska na ovu stanicu u "runTime" skali
+      const arriveRun = (stopDist / r.total) * runTime;
+
+      // stvarno vrijeme dolaska (dodaj stajanja prethodnih stanica)
+      const arriveReal = arriveRun + (i - 1) * DWELL_TIME;
+
+      // ako smo u prozoru stajanja -> zalijepi na dist stanice
+      if (tRel >= arriveReal && tRel < arriveReal + DWELL_TIME) {
+        distNow = stopDist;
+        break;
+      }
+
+      // ako smo nakon stajanja, “runClock” za daljnje računanje treba ignorirati već odrađeno stajanje
+      if (tRel >= arriveReal + DWELL_TIME) {
+        runClock = tRel - i * DWELL_TIME;
+      }
+    }
+
+    // ako nismo u stajanju, dist se računa iz runClock-a kroz runTime
+    // (ali samo ako runClock nije “preko”)
+    if (distNow !== (stationDists?.find(s => Math.abs(s.dist - distNow) < STOP_EPS)?.dist)) {
+      const runFrac = clamp(runClock / runTime, 0, 1);
+      distNow = runFrac * r.total;
+    }
+  }
+
+  frac = clamp(distNow / r.total, 0, 1);
+
+  const pt = pointAt(r, frac * r.total);
+  pos = pt.latlng;
+  ang = pt.angle;
+  showArrow = true;
+
+  if (pos) lastPosByVehicle.set(vozilo, pos);
+
+} else {
+  pos = rk ? (buildRoute(rk)?.poly?.[0] || null) : null;
+  ang = 0;
+  showArrow = true;
 }
 
-        } else {
-          pos = rk ? (buildRoute(rk)?.poly?.[0] || null) : null;
-          ang = 0;
-          showArrow = true;
-        }
 
         // FORSIRAJ strelicu u vožnji
         showArrow = true;
