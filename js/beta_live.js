@@ -59,6 +59,27 @@
     '12-24','12-25','12-26','12-27','12-28','12-29','12-30','12-31'
   ]);
 
+  // Vozila koja NE VOZE SUBOTOM (samo dnevne linije)
+const SATURDAY_DISABLED_VEHICLES = new Set([
+  'B102',
+  'B202',
+  'B302',
+  'B402',
+  'B502'
+]);
+
+function isSaturday(d = new Date()) {
+  return d.getDay() === 6;
+}
+
+function isVehicleDisabledToday(vozilo, linija) {
+  // vrijedi samo subotom, samo za dnevne linije
+  if (!isSaturday()) return false;
+  if (!isRegularLine(linija)) return false;
+  return SATURDAY_DISABLED_VEHICLES.has(vozilo);
+}
+
+
   function isSpecialDay(d = new Date()) {
     const md = pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
     return d.getDay() === 0 || SPECIAL_MD.has(md); // nedjelja ili poseban datum
@@ -96,21 +117,33 @@
     return !isSpecialLine(line);
   }
 
-  function tripAllowedNow(tr, tNowSec) {
+function tripAllowedNow(tr, tNowSec) {
   const special = isSpecialDay();
-  const night = isNightTimeSec(tNowSec);
 
-  // 🚋 P1 / P2 – AKO POSTOJI U VOZNOM REDU, DOZVOLI KRETANJE
-  if (isSpecialLine(tr.linija)) {
-    return true;
+  // 1️⃣ red (dnevni / posebni)
+  if (!tripMatchesToday(tr)) return false;
+
+  // 2️⃣ SUBOTA: izbaci neka vozila (samo dnevni režim, samo linije 1–5)
+  if (
+    !special &&
+    isSaturday() &&
+    isRegularLine(tr.linija) &&
+    SATURDAY_DISABLED_VEHICLES.has(tr.vozilo)
+  ) {
+    return false;
   }
 
-  // 1–5 i S-varijante
-  if (special) return false;
-  if (night) return false;
-
-  return true;
+  // 3️⃣ linije po režimu dana
+  if (special) {
+    // poseban dan → samo P1/P2
+    return isSpecialLine(tr.linija);
+  } else {
+    // dnevni dan → samo 1–5
+    return isRegularLine(tr.linija);
+  }
 }
+
+
 
 
   const hav = (a, b) => {
@@ -282,14 +315,14 @@ function formatMinsSmart(secondsLeft) {
 
   function pickRouteKeyForTrip(trip) {
  // === IZNIMKA DEFINIRANA PODACIMA ===
-if (
-  trip.red === 'dnevni_iznimka' &&
-  trip.linija === '4' &&
-  trip.smjer === 'od' &&
-  trip.okretište === 'Gomilice'
-) {
-  return '4_G-PR_DEPOT';
-}
+//if (
+  //trip.red === 'dnevni_iznimka' &&
+ // trip.linija === '4' &&
+  //trip.smjer === 'od' &&
+ // trip.okretište === 'Gomilice'
+//) {
+  //return '4_G-PR_DEPOT';
+//}
 
     // === 0) EKSPPLICITNA DEPOT / IZNIMNA RUTA IZ POLASCI.TXT ===
   // Ako je u stupcu "red" naveden točan routeKey (npr. 4_G-PR_DEPOT),
@@ -421,16 +454,17 @@ function getNextStopByDistance(routeKey, currentDistMeters) {
 }
 
 function arrivalsForStation(stationId, tNow) {
-  const best = new Map(); // ključ: linija|smjer
+const best = [];
 
   // grupiraj tripove po liniji + smjer
   const tripsByLineDir = new Map();
 
-  for (const tr of trips) {
-    const rk = pickRouteKeyForTrip(tr);
-    if (!rk) continue;
-      // ⛔ filtriraj po prometnim pravilima (ISTO kao karta)
-if (!tr._allowedAtStart && !isActiveTrip(tr, tNow)) continue;
+ for (const tr of trips) {
+  const rk = pickRouteKeyForTrip(tr);
+  if (!rk) continue;
+
+  // ⛔ samo tripovi koji su danas dozvoljeni
+  if (!tripAllowedNow(tr, tNow)) continue;
 
     const key = tr.linija + '|' + rk;
     if (!tripsByLineDir.has(key)) tripsByLineDir.set(key, []);
@@ -495,17 +529,18 @@ if (secondsLeft < 0 || secondsLeft > 10 * 60) continue;
 
 const fmt = formatMinsSmart(secondsLeft);
 
-best.set(key, {
+best.push({
   linija: tr.linija,
   smjer: destFromRouteKey(rk),
   label: fmt.label,
   sortMin: fmt.sortMin
 });
 
+
   }
 
- return Array.from(best.values())
-  .sort((a, b) => a.sortMin - b.sortMin);
+ return best.sort((a, b) => a.sortMin - b.sortMin);
+
 
 }
 
@@ -1147,10 +1182,22 @@ for (let i = arr.length - 1; i >= 0; i--) {
   }
 }
 
+// 🚫 SUBOTA: ova vozila ne postoje na karti (osim ako baš želiš depot-post logiku)
+if (isVehicleDisabledToday(vozilo, arr[0]?.linija)) {
+  const ex = markers.get(vozilo);
+  if (ex) {
+    layer.removeLayer(ex);
+    markers.delete(vozilo);
+  }
+  continue;
+}
+
+
 
       // 1) filtriraj tripove po prometnim pravilima (za OVAJ trenutak)
-      const arrAllowed = arr;
-const arrService = arr;
+const arrAllowed = arr.filter(tr => tripAllowedNow(tr, t));
+const arrService = arrAllowed;
+
 
 
       const lastRealTrip = arr[arr.length - 1] || null;
@@ -1197,6 +1244,20 @@ if (!arrAllowed.length && !activeAny) {
 const { prev, next } = findPrevNext(arrService, t);
       // 🔒 FALLBACK: ako nema prev/next zbog arrAllowed,
 // ali postoji stvarni zadnji završeni trip → STOJI NA OKRETIŠTU
+// 🚫 VOZILO JE DANAS POTPUNO VAN PROMETA (npr. subota)
+if (
+  !arrAllowed.length &&
+  !activeAny &&
+  isVehicleDisabledToday(vozilo, arr[0]?.linija)
+) {
+  const ex = markers.get(vozilo);
+  if (ex) {
+    layer.removeLayer(ex);
+    markers.delete(vozilo);
+  }
+  continue; // ⬅️ preskoči cijeli fallback
+}
+
 if (!prev && !next) {
   const lastFinished = arr
     .filter(tr => t >= tr._t1)
