@@ -770,8 +770,8 @@ function makeVehicleIcon(label, angleDeg, showArrow, color) {
 
   // Elipsa (badge)
   // Krug (badge)
-const cx = 33, cy = 38; 
-const r  = 18;          // radijus kruga (po želji 17–20)
+const cx = 33, cy = 33; 
+const r  = 16.5;          // radijus kruga (po želji 17–20)
 
 
   // Strelica (offset + veličina)
@@ -811,7 +811,7 @@ const baseY = cy - r - gap;
       ${arrow}
 <circle cx="${cx}" cy="${cy}" r="${r}" fill="${C}" stroke="white" stroke-width="2"></circle>
       <text x="${cx}" y="${cy+5}" text-anchor="middle"
-        font-size="13" font-weight="700" fill="white"
+        font-size="14" font-weight="700" fill="white"
         font-family="Arial, sans-serif">${label}</text>
     </svg>
   `;
