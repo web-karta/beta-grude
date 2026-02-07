@@ -826,6 +826,43 @@ function makeVehicleIcon(label, angleDeg, showArrow, color) {
 
   const DEST_LABEL = { P: 'PEŠIJA', D: 'DUBRAVA', K: 'KRŠTELICA', PR: 'PRISPA', G: 'GOMILICE', PO: 'POLJANICE', S: 'SPREMIŠTE BEKIJA' };
 
+  // Preko po LINJI + KRAJNJEM ODREDIŠTU
+// ključ: linija -> odredište -> tekst
+const VIA_BY_DEST = {
+  '1': {
+    'PEŠIJA':   'Bili Brig, Boboška)',
+    'DUBRAVA':  'Boboška, Bili Brig)'
+  },
+  '2': {
+    'KRŠTELICA': 'Gomilice, Krištelica)',
+    'PEŠIJA':    'Krištelica, Gomilice)'
+  },
+  '3': {
+    'PRISPA':    'Boboška, Otok)',
+    'KRŠTELICA': 'Otok, Boboška)'
+  },
+  '4': {
+    'PRISPA':    'Krištelica, Bili Brig)',
+    'GOMILICE':  'Bili Brig, Krištelica)'
+  },
+  '5': {
+    'GOMILICE':  'Prispa, Otok)',
+    'POLJANICE': 'Otok, Prispa)'
+  },
+  'P1': {
+    'POLJANICE': 'Boboška, Otok)',
+    'KRŠTELICA': 'Otok, Boboška)'
+  },
+  'P2': {
+    'DUBRAVA': 'Krištelica, Bili Brig)',
+    'PEŠIJA':  'Bili Brig, Krištelica)'
+  }
+};
+
+
+
+
+
   function destFromRouteKey(routeKey) {
     const m = /-([A-Z0-9]+)$/.exec(routeKey || '');
     if (!m) return '';
@@ -843,6 +880,29 @@ function popupHtml(tr, state) {
   // (Ako smo u "waiting" stanju i vozilo kreće u suprotnom smjeru,
   // to je upravo odredište iduće vožnje.)
   const dest = destFromRouteKey(state.routeKey || '');
+  // bazna linija bez S (1, 2, 5, P1, P2…)
+// bazna linija bez S (1, 2, 5, P1, P2…)
+const baseLine = String(tr.linija || '').replace(/S$/, '');
+
+// dinamički "Preko" prema odredištu
+const via =
+  VIA_BY_DEST?.[baseLine]?.[dest] || '';
+
+// tekst "Preko:" ako postoji definicija
+const viaText = via
+  ? `<div style="
+       font-size:13px;
+       font-weight:600;
+       margin-top:-10px;
+       line-height:1.1;
+     ">
+       (Preko: ${via}
+     </div>`
+  : '';
+
+
+
+
 
   // --- 1. RED: "2 PEŠIJA"
 const line1 = `
@@ -876,7 +936,9 @@ if (typeof state.secondsLeft === 'number') {
     ? `Sljedeća stanica: ${state.nextStopName}`
     : '';
 
-  return [line1, line2, line3].filter(Boolean).join('<br>');
+return [line1, viaText, line2, line3]
+  .filter(Boolean)
+  .join('<br>');
 }
 
   /* ================= FILTER UI ================= */
