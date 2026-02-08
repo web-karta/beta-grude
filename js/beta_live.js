@@ -991,13 +991,19 @@ const viaText = via
   // --- 1. RED: "2 PEŠIJA"
 const line1 = `
   <div style="
+    margin: -8px -12px 6px -12px;   /* rastegni do rubova popupa */
+    padding: 8px 12px;
+    background: #1264ab;           /* svijetlo plava */
+    color: #ffffff;                /* tamno plavi tekst */
     font-size: 15px;
     font-weight: 700;
     line-height: 1.2;
+    border-radius: 6px 6px 0 0;    /* lijepo zaobljenje gore */
   ">
     ${tr.linija} ${dest}
   </div>
 `;
+
 
   // --- minute (0 → "manje od 1 min.")
  let minsLabel = '?';
