@@ -232,7 +232,7 @@ function tripAllowedNow(tr, tNowSec) {
   // ===== PAMETNO ZAOKRUŽIVANJE MINUTA =====
 function formatMinsSmart(secondsLeft) {
   if (secondsLeft <= 30) {
-    return { label: 'manje od 1 min.', sortMin: 0 };
+    return { label: '<1 min.', sortMin: 0 };
   }
   if (secondsLeft < 90) {
     return { label: '1 min.', sortMin: 1 };
