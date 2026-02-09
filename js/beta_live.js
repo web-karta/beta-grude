@@ -1044,7 +1044,7 @@ if (state.mode === 'moving') {
   if (state.secondsLeft == null) {
     line2 = 'Nema više polazaka.';
   } else {
-    line2 = `⏱️: za ${minsLabel}`;
+    line2 = `Polazak: za ${minsLabel}`;
   }
 }
 
