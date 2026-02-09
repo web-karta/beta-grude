@@ -910,6 +910,17 @@ const baseY = cy - r - gap;
 
   const DEST_LABEL = { P: 'PEŠIJA', D: 'DUBRAVA', K: 'KRŠTELICA', PR: 'PRISPA', G: 'GOMILICE', PO: 'POLJANICE', S: 'SPREMIŠTE BEKIJA' };
 
+  // === DISPLAY OVERRIDES (samo za prikaz, ne za logiku!) ===
+const DEST_DISPLAY_OVERRIDE = {
+  'P2': {
+    'D': 'PRISPA'
+  },
+  'P2S': {
+    'D': 'PRISPA'
+  }
+};
+
+
   // Preko po LINJI + KRAJNJEM ODREDIŠTU
 // ključ: linija -> odredište -> tekst
 const VIA_BY_DEST = {
@@ -948,10 +959,23 @@ const VIA_BY_DEST = {
 
 
   function destFromRouteKey(routeKey) {
-    const m = /-([A-Z0-9]+)$/.exec(routeKey || '');
-    if (!m) return '';
-    return DEST_LABEL[m[1]] || m[1];
-  }
+  if (!routeKey) return '';
+
+  const m = /-([A-Z0-9]+)$/.exec(routeKey);
+  if (!m) return '';
+
+  const destCode = m[1];          // npr. D
+  const line = routeKey.split('_')[0]; // npr. P2
+
+  // 🔥 DISPLAY IZNIMKA (P2 → PRISPA)
+  const override =
+    DEST_DISPLAY_OVERRIDE?.[line]?.[destCode];
+
+  if (override) return override;
+
+  return DEST_LABEL[destCode] || destCode;
+}
+
   function oppositeDestFromRouteKey(routeKey) {
   const m = /_([A-Z0-9]+)-([A-Z0-9]+)$/.exec(routeKey || '');
   if (!m) return '';
