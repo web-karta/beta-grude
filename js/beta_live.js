@@ -1036,19 +1036,38 @@ if (typeof state.secondsLeft === 'number') {
 }
 
   // --- 2. RED: Polazak / Dolazak
-  let line2;
-  if (state.mode === 'moving') {
-    line2 = `Dolazak: ${minsLabel}`;
+ // --- 2. RED: ikona sata + vrijeme
+let line2;
+if (state.mode === 'moving') {
+  line2 = `⏱️: za ${minsLabel}`;
+} else {
+  if (state.secondsLeft == null) {
+    line2 = 'Nema više polazaka.';
   } else {
-    // čekanje / spremište
-    if (state.secondsLeft == null) line2 = 'Nema više polazaka.';
-    else line2 = `Polazak: ${minsLabel}`;
+    line2 = `⏱️: za ${minsLabel}`;
   }
+}
+
 
   // --- 3. RED: sljedeća stanica (NE DIRAMO)
-  const line3 = (state.mode === 'moving' && state.nextStopName)
-    ? `Sljedeća stanica: ${state.nextStopName}`
+  // --- 3. RED: ikona tramvaja (emoji) umjesto teksta
+// --- 3. RED: sljedeća stanica + mala ikona
+// --- 3. RED: 🚋: Naziv stanice
+const line3 =
+  (state.mode === 'moving' && state.nextStopName)
+    ? `
+      <div style="
+        margin-top:6px;
+        font-size:13px;
+        font-weight:normal;
+      ">
+        🚋: ${state.nextStopName}
+      </div>
+    `
     : '';
+
+
+
 
 return [line1, viaText, line2, line3]
   .filter(Boolean)
