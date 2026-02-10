@@ -54,10 +54,10 @@ const STOP_EPS = 10;
     return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
   };
 
-  function isNightNow(d = new Date()) {
-  const h = d.getHours();
-  return (h >= 22 || h < 5); // ← prilagodi ako želiš
-}
+  //function isNightNow(d = new Date()) {
+  //const h = d.getHours();
+ // return (h >= 22 || h < 5); // ← prilagodi ako želiš
+//}
 
     /* ================= SERVICE CALENDAR (PROMETNA PRAVILA) ================= */
 
@@ -140,9 +140,9 @@ const VEH_WEEKDAYS_ONLY = new Set([
   'B102','B202','B302','B402','B502'
 ]);
 
-const VEH_NIGHT_ONLY = new Set([
-  'B602','B702'
-]);
+//const VEH_NIGHT_ONLY = new Set([
+  //'B602','B702'
+//]);
 
 const VEH_SPECIAL_ONLY = new Set([
   'B802','B902'
@@ -157,12 +157,6 @@ function tripAllowedNow(tr, tNowSec) {
   const isSun = day === 0;
   const isSat = day === 6;
   const special = isSpecialDay(d);
-  const night = isNightNow(d);
-
-  // 🌙 NOĆNA VOZILA – voze svake noći, bez iznimke
-  if (VEH_NIGHT_ONLY.has(v)) {
-    return night;
-  }
 
   // 📅 SAMO NEDJELJA / POSEBNI DANI
   if (VEH_SPECIAL_ONLY.has(v)) {
@@ -179,9 +173,10 @@ function tripAllowedNow(tr, tNowSec) {
     return !isSun && !special;
   }
 
-  // ❌ sve ostalo – sigurnosno ne vozi
-  return false;
+  // ✅ SVE OSTALO: VOZI AKO POSTOJI TRIP
+  return true;
 }
+
 
 
 
