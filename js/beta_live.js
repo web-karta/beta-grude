@@ -944,7 +944,7 @@ const VIA_BY_DEST = {
     'KRŠTELICA': '(Otok — Boboška)'
   },
   'P2': {
-    'DUBRAVA': '(Krištelica — Bili Brig)',
+    'PRISPA': '(Krištelica — Bili Brig)',
     'PEŠIJA':  '(Bili Brig — Krištelica)'
   }
 };
