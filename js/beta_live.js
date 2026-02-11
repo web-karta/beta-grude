@@ -1008,20 +1008,77 @@ const viaText = via
 
 
   // --- 1. RED: "2 PEŠIJA"
-const line1 = `
+  // --- 1. RED: "3 PRISPA" (ZET stil)
+  const displayLine = displayLineForVehicle(tr, state.routeKey);
+// ✅ LED DOT-MATRIX CSS (ubaci samo jednom)
+if (!document.getElementById('betaLedCss')) {
+  const st = document.createElement('style');
+  st.id = 'betaLedCss';
+  st.textContent = `
+.beta-led-text{
+
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+
+  /* 🟡 PRAVE LED TOČKICE (bez blur efekta) */
+  background-image:
+    radial-gradient(circle,
+ #f4ff6a 0 1.15px,
+transparent 1.25px
+
+    );
+
+  background-size: 2.5px 2.5px;   /* ← veličina matrice (3.5–4px je ZET-like) */
+  background-position: 0 0;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  /* ❌ NEMA glow-a — zato će se točkice stvarno vidjeti */
+  filter: none;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+
+
+
+      background-image: radial-gradient(circle, rgba(215,247,180,0.98) 0 1.35px, transparent 1.55px);
+      background-size: 6px 6px;        /* gustoća točkica (smanji na 5px za gušće) */
+      background-position: 0 0;
+      -webkit-background-clip: text;
+      background-clip: text;
+
+      /* lagani “glow” kao LED */
+      filter: drop-shadow(0 0 1px rgba(215,247,180,0.75))
+              drop-shadow(0 0 2px rgba(215,247,180,0.35));
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+  `;
+  document.head.appendChild(st);
+}
+
+  const line1 = `
   <div style="
-    margin: -8px -12px 6px -12px;   /* rastegni do rubova popupa */
+    margin: -8px -12px 6px -12px;
     padding: 8px 12px;
-    background: #1264ab;           /* svijetlo plava */
-    color: #ffffff;                /* tamno plavi tekst */
+    background: #1264ab;
+    color: #ffffff;
     font-size: 15px;
     font-weight: 700;
     line-height: 1.2;
-    border-radius: 6px 6px 0 0;    /* lijepo zaobljenje gore */
+    border-radius: 6px 6px 0 0;
   ">
-    ${tr.linija} ${dest}
+    <span class="beta-led-text">${displayLine} ${dest}</span>
   </div>
 `;
+
+
 
 
   // --- minute (0 → "manje od 1 min.")
